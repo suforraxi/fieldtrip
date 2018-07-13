@@ -101,23 +101,22 @@ end
 method = ft_getopt(vol,'method','hminv');
 ecog = ft_getopt(vol,'ecog','no');
 
-% Use basefile and workdir for saving files
-if isfield(vol,'path')
-    workdir = vol.path;
-    cleanup_flag = false;
-else
-    workdir = fullfile(tempdir,'ft-om');
-    cleanup_flag = true;
-end
-mkdir(workdir);
-
+% Use basefile and basepath for saving files
 if isfield(vol,'basefile')
     basefile = vol.basefile;
 else
-    [~,basefile] = fileparts(tempname);
+    basefile = tempname;
 end
+if isfield(vol,'path')
+    path = vol.path;
+    cleanup_flag = false;
+else
+    path = fullfile(tempdir,'ft-om');
+    cleanup_flag = true;
+end
+mkdir(path);
 
-sensorFile = fullfile(workdir, [basefile '_sensorcoords.txt']);
+sensorFile = fullfile(path, [basefile '_sensorcoords.txt']);
 if exist(sensorFile,'file')
     disp('Sensor coordinate file already exists. Skipping...')
 else
@@ -167,7 +166,7 @@ else
     fclose(fid);
 end
 
-condFile = fullfile(workdir, [basefile '.cond']);
+condFile = fullfile(path, [basefile '.cond']);
 if exist(condFile,'file')
     disp('Conductivity file already exists. Skipping...')
 else
@@ -175,7 +174,7 @@ else
     write_cond(vol,condFile);
 end
 
-geomFile = fullfile(workdir, [basefile '.geom']);
+geomFile = fullfile(path, [basefile '.geom']);
 if exist(geomFile,'file')
     disp('Geometry descriptor file already exists. Skipping...')
 else
@@ -185,7 +184,7 @@ end
 
 disp('Writing OpenMEEG mesh files...')
 
-write_mesh(vol,workdir,basefile);
+write_mesh(vol,path,basefile);
 
 disp('Validating mesh...')
 [om_status om_msg] = system([fullfile(OPENMEEG_PATH, 'om_check_geom'), ' -g ', geomFile])
@@ -197,7 +196,7 @@ disp('Writing dipole file...')
 chunks = ceil(size(voxels,1)/VOXCHUNKSIZE);
 dipFile = cell(chunks,1);
 for ii = 1:chunks
-    dipFile{ii} = fullfile(workdir, [basefile '_voxels' num2str(ii) om_ext]);
+    dipFile{ii} = fullfile(path, [basefile '_voxels' num2str(ii) om_ext]);
     if exist(dipFile{ii},'file')
         fprintf('\t%s already exists. Skipping...\n', dipFile{ii});
     else
@@ -208,7 +207,7 @@ for ii = 1:chunks
 end
 
 
-hmFile = fullfile(workdir, [basefile '_hm' om_ext]);
+hmFile = fullfile(path, [basefile '_hm' om_ext]);
 if exist(hmFile,'file')
     disp('Head matrix already exists. Skipping...')
 else
@@ -220,7 +219,7 @@ else
 end
 
 if strcmp(method,'hminv')
-    hminvFile = fullfile(workdir, [basefile '_hminv' om_ext]);
+    hminvFile = fullfile(path, [basefile '_hminv' om_ext]);
     if exist(hminvFile,'file')
         disp('Inverse head matrix already exists. Skipping...');
     else
@@ -238,7 +237,7 @@ end
     
 dsmFile = cell(chunks,1);
 for ii = 1:chunks
-    dsmFile{ii} = fullfile(workdir, [basefile '_dsm' num2str(ii) om_ext]);
+    dsmFile{ii} = fullfile(path, [basefile '_dsm' num2str(ii) om_ext]);
     if exist(dsmFile{ii},'file')
         fprintf('\t%s already exists. Skipping...\n', dsmFile{ii});
     else
@@ -256,14 +255,14 @@ disp('--------------------------------------')
 
 if ft_senstype(sens, 'eeg')
     if strcmp(ecog,'yes')
-        ohmicFile = fullfile(workdir, [basefile '_h2ecogm']);
+        ohmicFile = fullfile(path, [basefile '_h2ecogm']);
         cmd = '-h2ecogm';
     else
-        ohmicFile = fullfile(workdir, [basefile '_h2em' om_ext]);
+        ohmicFile = fullfile(path, [basefile '_h2em' om_ext]);
         cmd = '-h2em';
     end
 else
-    ohmicFile = fullfile(workdir, [basefile '_h2mm' om_ext]);
+    ohmicFile = fullfile(path, [basefile '_h2mm' om_ext]);
     cmd = '-h2mm';
 end
 if exist(ohmicFile,'file')
@@ -280,7 +279,7 @@ if ft_senstype(sens, 'meg')
     disp('Contribution of all sources to the MEG sensors')
     scFile = cell(chunks,1);
     for ii = 1:chunks
-        scFile{ii} = fullfile(workdir, [basefile '_ds2mm' num2str(ii) om_ext]);
+        scFile{ii} = fullfile(path, [basefile '_ds2mm' num2str(ii) om_ext]);
         if exist(scFile{ii},'file')
             fprintf('\t%s already exists. Skipping...\n',scFile{ii})
         else
@@ -296,9 +295,9 @@ disp('Putting it all together.')
 bemFile = cell(chunks,1);
 for ii = 1:chunks
     if ft_senstype(sens, 'eeg')
-        bemFile{ii} = fullfile(workdir, [basefile '_eeggain' num2str(ii) om_ext]);
+        bemFile{ii} = fullfile(path, [basefile '_eeggain' num2str(ii) om_ext]);
     else
-        bemFile{ii} = fullfile(workdir, [basefile '_meggain' num2str(ii) om_ext]);
+        bemFile{ii} = fullfile(path, [basefile '_meggain' num2str(ii) om_ext]);
     end
     
     if exist(bemFile{ii},'file')
@@ -325,21 +324,14 @@ for ii = 1:chunks
 end
 
 % Import lead field/potential
-[g, voxels_in] = import_gain(workdir, basefile, ft_senstype(sens, 'eeg'));
-if find(voxels_in ~= voxels) & (nargout == 1)
-    ft_warning('Imported voxels from OpenMEEG process not the same as function input.');
-end
+[g, voxels_in] = import_gain(path, basefile, ft_senstype(sens, 'eeg'));
+if (voxels_in ~= voxels) && (nargout == 1); ft_warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
 
-% multiplication with sens.tra matrix should happen in ft_prepare_leadfield
-% instead:
-sens.tra = eye(size(g,1))
 lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
-
-%lp = g; % Mchannels x (3 orientations x Nvoxels)
 
 % Cleanup
 if cleanup_flag
-    rmdir(workdir,'s')
+    rmdir(basepath,'s')
 end
 if (isunix && ~ismac)
     setenv('LD_LIBRARY_PATH',ldLibraryPath0);
@@ -359,14 +351,14 @@ end
 fclose(fid);
 
 
-function write_geom(vol,filename,basefile)
+function write_geom(vol,filename,basepathfile)
 fid=fopen(filename,'w');
 fprintf(fid,'# Domain Description 1.0\n');
 fprintf(fid,'Interfaces %i Mesh\n',length(vol.cond));
 tissues={'_scalp.tri\n'; '_skull.tri\n'; '_csf.tri\n'; '_brain.tri\n'};
 if length(vol.cond)==3; tissues = tissues([1 2 4]); end;
 for ii = 1:length(vol.cond)
-    fprintf(fid,[basefile tissues{ii}]);
+    fprintf(fid,[basepathfile tissues{ii}]);
 end
 fprintf('\n');
 fprintf(fid,'Domains %i\n',length(vol.cond)+1);
