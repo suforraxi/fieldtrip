@@ -556,6 +556,12 @@ else
   eventtypes = [];
 end
 
+%% Matteo 25/04/2018
+cfg.invariantSetting=[2048 2048 50 50];
+%%
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up default functions to be available in the right-click menu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -574,36 +580,64 @@ if ~iscell(cfg.selfun) && ~isempty(cfg.selfun)
   cfg.selcfg = {cfg.selcfg}; % assume the cfg is not a cell-array
   cfg.selcfg = [cfg.selcfg defselcfg];
 else
-  % simplefft
-  defselcfg{1} = [];
-  defselcfg{1}.chancolors = chancolors;
-  defselfun{1} = 'simpleFFT';
-  % multiplotER
-  defselcfg{2} = [];
-  defselcfg{2}.layout = cfg.layout;
-  defselfun{2} = 'multiplotER';
-  % topoplotER
-  defselcfg{3} = [];
-  defselcfg{3}.layout = cfg.layout;
-  defselfun{3} = 'topoplotER';
-  % topoplotVAR
-  defselcfg{4} = [];
-  defselcfg{4}.layout = cfg.layout;
-  defselfun{4} = 'topoplotVAR';
-  % movieplotER
-  defselcfg{5} = [];
-  defselcfg{5}.layout      = cfg.layout;
-  defselcfg{5}.interactive = 'yes';
-  defselfun{5} = 'movieplotER';
-  % audiovideo
-  defselcfg{6} = [];
-  defselcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
-  defselcfg{6}.videofile = ft_getopt(cfg, 'videofile');
-  defselcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
-  defselfun{6} = 'audiovideo';
+%   % simplefft
+%   defselcfg{1} = [];
+%   defselcfg{1}.chancolors = chancolors;
+%   defselfun{1} = 'simpleFFT';
+%   % multiplotER
+%   defselcfg{2} = [];
+%   defselcfg{2}.layout = cfg.layout;
+%   defselfun{2} = 'multiplotER';
+%   % topoplotER
+%   defselcfg{3} = [];
+%   defselcfg{3}.layout = cfg.layout;
+%   defselfun{3} = 'topoplotER';
+%   % topoplotVAR
+%   defselcfg{4} = [];
+%   defselcfg{4}.layout = cfg.layout;
+%   defselfun{4} = 'topoplotVAR';
+%   % movieplotER
+%   defselcfg{5} = [];
+%   defselcfg{5}.layout      = cfg.layout;
+%   defselcfg{5}.interactive = 'yes';
+%   defselfun{5} = 'movieplotER';
+%   % audiovideo
+%   defselcfg{6} = [];
+%   defselcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
+%   defselcfg{6}.videofile = ft_getopt(cfg, 'videofile');
+%   defselcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
+%   defselfun{6} = 'audiovideo';
+    
+   defselcfg{1} = [];
+   defselcfg{1}.invariantSetting=cfg.invariantSetting;
+   defselfun{1} = 'exec_invariant_ft';
+   
+   defselcfg{2} = [];
+   defselcfg{2}.invariantSetting=cfg.invariantSetting;
+   defselfun{2} = 'exec_invariant_ft2';
+
+   defselcfg{3} = [];
+   defselcfg{3}.invariantSetting=cfg.invariantSetting;
+   defselfun{3} = 'exec_invariant_ft3';
+   
+   defselcfg{4} = [];
+   defselcfg{4}.invariantSetting=cfg.invariantSetting;
+   defselfun{4} = 'exec_invariant_ft4';
+   
+   defselcfg{5} = [];
+   defselcfg{5}.invariantSetting=cfg.invariantSetting;
+   defselfun{5} = 'exec_invariant_ft5';
   
-  cfg.selfun = defselfun;
-  cfg.selcfg = defselcfg;
+   defselcfg{6} = [];
+   defselcfg{6}.invariantSetting=cfg.invariantSetting;
+   defselfun{6} = 'exec_invariant_ft6';
+   
+   defselcfg{7} = [];
+   defselcfg{7}.invariantSetting=cfg.invariantSetting;
+   defselfun{7} = 'exec_invariant_ft7';
+   
+   cfg.selfun = defselfun;
+   cfg.selcfg = defselcfg;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -739,6 +773,14 @@ uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbu
 uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'vertical', 'userdata', 'v')
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+downarrow')
 uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+uparrow')
+
+%%Matteo 25/04/2018
+
+uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'custom_settings', 'userdata', 'invariant_setting')
+
+
+%%
+
 
 % legend artifacts/features
 for iArt = 1:length(artlabel)
@@ -1118,28 +1160,32 @@ else
   
   % get index into cfgs
   selfunind = strcmp(cfg.selfun, cmenulab);
-  
+  %% Matteo 05/05/2018 
   % cut out the requested data segment
   switch cfg.seldat
     case 'current'
-      seldata             = keepfields(opt.curdata, {'label', 'grad', 'elec', 'opto', 'hdr'});
+      seldata             = keepfields(opt.curdata, {'label', 'grad', 'elec', 'opto', 'hdr','trialinfo'});
       seldata.trial{1}    = ft_fetch_data(opt.curdata, 'begsample', begsel, 'endsample', endsel);
     case 'all'
-      seldata             = keepfields(opt.org, {'label', 'grad', 'elec', 'opto', 'hdr'});
+      seldata             = keepfields(opt.orgdata, {'label', 'grad', 'elec', 'opto', 'hdr','trialinfo'});
       seldata.trial{1}    = ft_fetch_data(opt.orgdata, 'begsample', begsel, 'endsample', endsel);
   end
   seldata.time{1}     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
   seldata.fsample     = opt.fsample;
   seldata.sampleinfo  = [begsel endsel];
-  
+  %% Matteo 05/05/2018 
   % prepare input
   funhandle = ft_getuserfun(cmenulab, 'browse');
   funcfg    = cfg.selcfg{selfunind};
   % get windowname and give as input (can be used for the other functions as well, not implemented yet)
   if ~strcmp(opt.trialviewtype, 'trialsegment')
-    str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    %str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1),seldata.time{1}(1), seldata.time{1}(end),...
+      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
   else
-    str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    %str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end),...
+      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
   end
   funcfg.figurename = [cmenulab ': ' str];
   feval(funhandle, funcfg, seldata);
@@ -1259,9 +1305,8 @@ if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) |
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
-  key = parsekeyboardevent(eventdata);
+  key = parseKeyboardEvent(eventdata);
 end
-
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');
@@ -1580,6 +1625,32 @@ switch key
     % do nothing
   case 'alt+alt'
     % do nothing
+  %Matteo 25/04/2018 
+   case 'invariant_setting'
+     % select the vertical scaling
+    response = inputdlg('settings invariant, [window length, overlap, nFreqComponet,th]', 'specify', 1, {['[ ' num2str(cfg.invariantSetting) ' ]']});
+    if ~isempty(response)
+        % convert to string and add brackets, just to ensure that str2num will work
+        tmp = str2num(['[' response{1} ']']);
+        if numel(tmp)==4
+          cfg.invariantSetting = tmp;
+          
+          defselcfg{1}.invariantSetting=cfg.invariantSetting;
+          defselcfg{2}.invariantSetting=cfg.invariantSetting;
+          defselcfg{3}.invariantSetting=cfg.invariantSetting;
+          defselcfg{4}.invariantSetting=cfg.invariantSetting;
+          defselcfg{5}.invariantSetting=cfg.invariantSetting;
+          defselcfg{6}.invariantSetting=cfg.invariantSetting;
+          defselcfg{7}.invariantSetting=cfg.invariantSetting;
+          cfg.selcfg=defselcfg;
+        else
+          ft_warning('incorrect specification of invariant settings, keeping defaults')
+        end
+        setappdata(h, 'opt', opt);
+        setappdata(h, 'cfg', cfg);
+        redraw_cb(h, eventdata);
+    end 
+  %custom setting for function      
   otherwise
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
@@ -1694,6 +1765,8 @@ opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
+%% Matteo 05/05/2018
+opt.curdata.trialinfo=opt.orgdata.trialinfo;
 % remove the local copy of the data fields
 clear lab tim dat
 
@@ -2132,11 +2205,15 @@ if nsamplepad>0
 else
   endtim = tim(end);
 end
-
+    %Matteo 05/05/2018
 if ~strcmp(opt.trialviewtype, 'trialsegment')
-  str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim);
+  %str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim);
+  str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim,...
+      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
 else
-  str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
+  %str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
+  str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim,...
+      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
 end
 title(str);
 
@@ -2150,6 +2227,36 @@ cfg.channel = userchan;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 end % function redraw_cb
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
+
+end % function parseKeyboardEvent
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -2202,3 +2309,7 @@ setappdata(h, 'opt', opt);
 redraw_cb(h,eventdata);
 
 end  % function datacursortext
+
+
+
+
