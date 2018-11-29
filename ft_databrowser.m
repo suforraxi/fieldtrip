@@ -1766,7 +1766,7 @@ opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
 %% Matteo 05/05/2018
-opt.curdata.trialinfo=opt.orgdata.trialinfo;
+%opt.curdata.trialinfo=opt.orgdata.trialinfo;
 % remove the local copy of the data fields
 clear lab tim dat
 
