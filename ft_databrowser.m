@@ -557,7 +557,8 @@ else
 end
 
 %% Matteo 25/04/2018
-cfg.invariantSetting=[2048 2048 50 50];
+cfg.invariantSetting = [2048 2048 50 50];
+cfg.file2save        =  cfg.file2save;
 %%
 
 
@@ -1628,28 +1629,30 @@ switch key
   %Matteo 25/04/2018 
    case 'invariant_setting'
      % select the vertical scaling
-    response = inputdlg('settings invariant, [window length, overlap, nFreqComponet,th]', 'specify', 1, {['[ ' num2str(cfg.invariantSetting) ' ]']});
-    if ~isempty(response)
-        % convert to string and add brackets, just to ensure that str2num will work
-        tmp = str2num(['[' response{1} ']']);
-        if numel(tmp)==4
-          cfg.invariantSetting = tmp;
-          
-          defselcfg{1}.invariantSetting=cfg.invariantSetting;
-          defselcfg{2}.invariantSetting=cfg.invariantSetting;
-          defselcfg{3}.invariantSetting=cfg.invariantSetting;
-          defselcfg{4}.invariantSetting=cfg.invariantSetting;
-          defselcfg{5}.invariantSetting=cfg.invariantSetting;
-          defselcfg{6}.invariantSetting=cfg.invariantSetting;
-          defselcfg{7}.invariantSetting=cfg.invariantSetting;
-          cfg.selcfg=defselcfg;
-        else
-          ft_warning('incorrect specification of invariant settings, keeping defaults')
-        end
-        setappdata(h, 'opt', opt);
-        setappdata(h, 'cfg', cfg);
-        redraw_cb(h, eventdata);
-    end 
+%     response = inputdlg('settings invariant, [window length, overlap, nFreqComponet,th]', 'specify', 1, {['[ ' num2str(cfg.invariantSetting) ' ]']});
+%     if ~isempty(response)
+%         % convert to string and add brackets, just to ensure that str2num will work
+%         tmp = str2num(['[' response{1} ']']);
+%         if numel(tmp)==4
+%           cfg.invariantSetting = tmp;
+%           
+%           defselcfg{1}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{2}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{3}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{4}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{5}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{6}.invariantSetting=cfg.invariantSetting;
+%           defselcfg{7}.invariantSetting=cfg.invariantSetting;
+%           cfg.selcfg=defselcfg;
+%         else
+%           ft_warning('incorrect specification of invariant settings, keeping defaults')
+%         end
+%         setappdata(h, 'opt', opt);
+%         setappdata(h, 'cfg', cfg);
+%         redraw_cb(h, eventdata);
+%     end 
+
+    saveas(gcf,replace(cfg.file2save,'.vhdr',''),'png')
   %custom setting for function      
   otherwise
     setappdata(h, 'opt', opt);
