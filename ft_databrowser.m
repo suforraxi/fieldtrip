@@ -1652,7 +1652,9 @@ switch key
 %         redraw_cb(h, eventdata);
 %     end 
 
-    saveas(gcf,replace(cfg.file2save,'.vhdr',''),'png')
+    saveas(gcf,sprintf('%s_%02i',cfg.file2save,cfg.saveCounter),'png')
+    cfg.saveCounter = cfg.saveCounter + 1;
+    setappdata(h, 'cfg', cfg);
   %custom setting for function      
   otherwise
     setappdata(h, 'opt', opt);
