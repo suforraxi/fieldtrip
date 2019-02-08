@@ -557,7 +557,7 @@ else
 end
 
 %% Matteo 25/04/2018
-cfg.invariantSetting = [2048 2048 50 50];
+[~,cfg.invariantSetting,~] =  fileparts(cfg.file2save);
 cfg.file2save        =  cfg.file2save;
 %%
 
@@ -1181,12 +1181,16 @@ else
   % get windowname and give as input (can be used for the other functions as well, not implemented yet)
   if ~strcmp(opt.trialviewtype, 'trialsegment')
     %str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
-    str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1),seldata.time{1}(1), seldata.time{1}(end),...
-      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+%     str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1),seldata.time{1}(1), seldata.time{1}(end),...
+%       cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+    str = sprintf('%s %d/%d, time from %g to %g s settings= %s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1),seldata.time{1}(1), seldata.time{1}(end),...
+      cfg.invariantSetting);
   else
     %str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
-    str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end),...
-      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+%     str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end),...
+%       cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+    str = sprintf('%s %d/%d, time from %g to %g s settings= %s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1),seldata.time{1}(1), seldata.time{1}(end),...
+      cfg.invariantSetting);
   end
   funcfg.figurename = [cmenulab ': ' str];
   feval(funhandle, funcfg, seldata);
@@ -2213,14 +2217,18 @@ end
     %Matteo 05/05/2018
 if ~strcmp(opt.trialviewtype, 'trialsegment')
   %str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim);
-  str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim,...
-      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+%   str = sprintf('%s %d/%d, time from %g to %g s settings= %i/%i/%i/%i', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim,...
+%       cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+  str = sprintf('%s %d/%d, time from %g to %g s settings= %s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim,...
+      cfg.invariantSetting);
 else
   %str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim);
-  str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim,...
-      cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+%   str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s settings= %i/%i/%i/%i', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), startim, endtim,...
+%       cfg.invariantSetting(1),cfg.invariantSetting(2),cfg.invariantSetting(3),cfg.invariantSetting(4));
+  str = sprintf('%s %d/%d, time from %g to %g s settings= %s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), startim, endtim,...
+      cfg.invariantSetting);
 end
-title(str);
+title(str,'Interpreter','none');
 
 % possibly adds some responsiveness if the 'thing' is clogged
 drawnow
