@@ -1630,6 +1630,41 @@ switch key
     % do nothing
   case 'alt+alt'
     % do nothing
+  case 'slash'
+    %Matteo
+    
+    art_channels  = setdiff( opt.orgdata.label,opt.curdata.label);
+    
+    art_idx = zeros(size(opt.orgdata.label));
+    if(~isempty(art_channels)) 
+        for i = 1 :numel(art_channels)
+            art_idx = art_idx | strcmp(art_channels{i},opt.orgdata.label);
+        end     
+    end
+   
+    subjName       = regexpi(cfg.file2save,'\w*sub-(\w*)_','tokens');
+    sitName        = regexpi(cfg.file2save,'\w*ses-(\w*)_','tokens');
+    subjName       = subjName{1};
+    sitName        = sitName{1};
+    [~,fileName,~] = fileparts(cfg.file2save); 
+    
+    varNames = {'fName','subjName','sitName','chName','artefact' }; 
+    
+    fName_v    = cell(length(opt.orgdata.label),1);
+    subjName_v = cell(length(opt.orgdata.label),1);
+    sitName_v  = cell(length(opt.orgdata.label),1);
+    
+    [fName_v{:}]    = deal(fileName);
+    [subjName_v{:}] = deal(subjName{1});
+    [sitName_v{:}]  = deal(sitName{1});
+    
+    chName_v   = opt.orgdata.label;
+    artefact_v = double(art_idx);
+    
+    visualArt_T = table(fName_v,subjName_v,sitName_v,chName_v,artefact_v,'VariableNames',varNames);
+    writetable(visualArt_T,sprintf('%s_visArt.tsv',cfg.file2save),'FileType','text','Delimiter','tab')
+    %setappdata(h, 'opt', opt);
+    %setappdata(h, 'cfg', cfg);
   %Matteo 25/04/2018 
    case 'invariant_setting'
      % select the vertical scaling
