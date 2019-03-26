@@ -103,16 +103,16 @@ else
     0 0 1 -10
     0 0 0 1
     ];
-  elec_aligned2 = ft_transform_sens(transform, elec_aligned);
+  elec_aligned2 = ft_transform_geometry(transform, elec_aligned);
 end
 
 %%%%%%%%%
 
 cfg = [];
-cfg.vol = vol;
-cfg.grid.resolution = 10;
+cfg.headmodel = vol;
+cfg.sourcemodel.resolution = 10;
 cfg.elec = elec_aligned2;
-cfg.grid.unit = 'mm';
+cfg.sourcemodel.unit = 'mm';
 source = ft_prepare_sourcemodel(cfg);
 
 

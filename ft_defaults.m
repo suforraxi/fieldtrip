@@ -5,9 +5,9 @@ function ft_defaults
 % call this function in your startup.m script. This function is also called at the
 % begin of all FieldTrip functions.
 %
-% The configuration defaults are stored in the global "ft_default" structure.
-% The ft_checkconfig function that is called by many FieldTrip functions will
-% merge this global ft_default structure with the cfg ctructure that you pass to
+% The global configuration defaults are stored in the global "ft_default" structure.
+% The ft_checkconfig function that is called by many FieldTrip functions will merge
+% these global configuration defaults with the cfg ctructure that you pass to
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
@@ -24,6 +24,13 @@ function ft_defaults
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
 %   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.reproducescript   = string, directory to which the script and intermediate data are written (default = [])
+%
+% If you want to overrule these default settings, you can add something like this in your startup.m script
+%   ft_defaults
+%   global ft_default
+%   ft_default.option1 = value1
+%   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
 % want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
@@ -56,6 +63,7 @@ function ft_defaults
 % $Id$
 
 global ft_default
+
 persistent initialized
 persistent checkpath
 
@@ -72,7 +80,7 @@ if ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
-% locate the file that contains the persistent FieldTrip preferences
+% locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
@@ -124,6 +132,12 @@ if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
+if isfield(ft_default, 'toolbox') && isfield(ft_default.toolbox, 'cleanup')
+  prevcleanup = ft_default.toolbox.cleanup;
+else
+  prevcleanup = {};
+end
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -134,13 +148,13 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-  
+
   if isempty(which('ft_hastoolbox')) || isempty(which('ft_platform_supports'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
-  
+
   % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
   % The following will issue a warning
   checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
@@ -171,33 +185,33 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-  
+
   try
     % external/signal contains alternative implementations of some signal processing functions
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
-  
+
   try
     % external/stats contains alternative implementations of some statistics functions
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
-  
+
   try
     % external/images contains alternative implementations of some image processing functions
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
-  
+
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end
-  
+
   try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
@@ -226,8 +240,10 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
+    % this deals with compatibility with all OCTAVE versions
+    if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
-  
+
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout',      1, 1);
@@ -237,62 +253,62 @@ if ~isdeployed
     ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
-  
+
   try
     % this is used in ft_statistics
     ft_hastoolbox('statfun', 1, 1);
   end
-  
+
   try
     % this is used in ft_definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
-  
+
   try
     % this contains the low-level reading functions
     ft_hastoolbox('fileio', 1, 1);
   end
-  
+
   try
     % this is for filtering etc. on time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
-  
+
   try
     % this contains forward models for the EEG and MEG volume conductor
     ft_hastoolbox('forward', 1, 1);
   end
-  
+
   try
     % this contains inverse source estimation methods
     ft_hastoolbox('inverse', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
     ft_hastoolbox('plotting', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level functions for spectral analysis
     ft_hastoolbox('specest', 1, 1);
   end
-  
+
   try
     % this contains the functions to compute connectivity metrics
     ft_hastoolbox('connectivity', 1, 1);
   end
-  
+
   try
     % this contains the functions for spike and spike-field analysis
     ft_hastoolbox('spike', 1, 1);
   end
-  
+
   try
     % this contains user contributed functions
     ft_hastoolbox('contrib/misc', 1, 1);
   end
-  
+
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -300,8 +316,11 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
-  
+
 end
+
+% the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
+ft_default.toolbox.cleanup = prevcleanup;
 
 % track the usage of this function, this only happens once at startup
 ft_trackusage('startup');
@@ -310,6 +329,7 @@ ft_trackusage('startup');
 initialized = true;
 
 end % function ft_default
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

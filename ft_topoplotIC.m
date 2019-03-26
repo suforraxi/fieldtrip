@@ -136,12 +136,13 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, 'inputfile');
+tmpcfg = keepfields(cfg, {'layout', 'elec', 'grad', 'opto', 'showcallinfo'});
 tmpcomp.label = comp.topolabel; % the input to ft_prepare_layout needs at least a data.label field
 cfg.layout = ft_prepare_layout(tmpcfg, tmpcomp);
 clear tmpcomp;
 
 % don't show the callinfo for each separate component
+tmpshowcallinfo = cfg.showcallinfo;
 cfg.showcallinfo = 'no';
 
 % create temporary variable to prevent overwriting the selected components
@@ -194,14 +195,17 @@ end
 cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
-cfg.showcallinfo = 'yes';
+cfg.showcallinfo = tmpshowcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
+  % don't return anything
   clear cfg
 end
+
