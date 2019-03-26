@@ -24,7 +24,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
 %   cfg.zlim           = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.baseline       = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
-%   cfg.baselinetype   = 'absolute', 'relative', 'relchange' or 'db' (default = 'absolute')
+%   cfg.baselinetype   = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see FT_CHANNELSELECTION for details
@@ -105,7 +105,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble provenance
+ft_preamble loadvar data
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -199,11 +200,12 @@ end
 
 % Apply baseline correction:
 if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'baselinewindow', 'demean', 'parameter', 'channel'});
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  data = ft_freqbaseline(cfg, data);
+  data = ft_freqbaseline(tmpcfg, data);
   % put mask-parameter back if it is set
   if ~isempty(cfg.maskparameter)
     data.(cfg.maskparameter) = tempmask;
@@ -223,7 +225,6 @@ tmpvar = data;
 tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
 cfg.channel = tmpchannel;
-
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
@@ -337,10 +338,10 @@ if ~isempty(cfg.maskparameter)
     maskmatrix(~maskmatrix) = cfg.maskalpha;
   elseif isnumeric(maskmatrix)
     if strcmp(cfg.maskstyle, 'outline')
-      error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
+      ft_error('Outline masking with a numeric cfg.maskparameter is not supported. Please use a logical mask instead.')
     end
     if cfg.maskalpha ~= 1
-      warning(sprintf('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter))
+      ft_warning('Using field "%s" for masking, cfg.maskalpha is ignored.', cfg.maskparameter)
     end
     % scale mask between 0 and 1
     minval = min(maskmatrix(:));
@@ -486,8 +487,9 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
+ft_postamble savefig
 
-if ~nargout
+if ~ft_nargout
   % don't return anything
   clear cfg
 end
